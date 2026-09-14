@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TasLink 動作検証マニュアル Part 2 - 細部検証編</title>
+<style>
+  :root {
+    --primary: #7c3aed;
+    --primary-light: #ede9fe;
+    --primary-dark: #5b21b6;
+    --success: #16a34a;
+    --warning: #ea580c;
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", "Hiragino Sans", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    line-height: 1.7;
+  }
+  .prod-banner {
+    background: linear-gradient(90deg, var(--danger) 0%, #b91c1c 100%);
+    color: white;
+    padding: 10px 24px;
+    text-align: center;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    font-size: 14px;
+  }
+  .part2-banner {
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 10px 24px;
+    text-align: center;
+    font-weight: bold;
+    position: sticky;
+    top: 40px;
+    z-index: 99;
+    font-size: 14px;
+  }
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 300px;
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    position: sticky;
+    top: 80px;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .sidebar h2 { font-size: 16px; margin: 0 0 12px; color: var(--primary); }
+  .sidebar ul { list-style: none; padding: 0; margin: 0; }
+  .sidebar li { margin: 4px 0; }
+  .sidebar a {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .sidebar a:hover { background: var(--primary-light); }
+  main {
+    flex: 1;
+    padding: 32px 48px;
+    max-width: 1000px;
+  }
+  h1 { color: var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 8px; margin-top: 0; }
+  h2 {
+    background: var(--primary);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-top: 40px;
+    scroll-margin-top: 100px;
+  }
+  h3 {
+    color: var(--primary);
+    border-left: 4px solid var(--primary);
+    padding-left: 12px;
+    margin-top: 32px;
+    scroll-margin-top: 100px;
+  }
+  h4 { color: var(--text); margin-top: 24px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+  .callout {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+    border-left: 4px solid;
+  }
+  .callout-info { background: #eff6ff; border-color: #2563eb; }
+  .callout-warn { background: #fff7ed; border-color: var(--warning); }
+  .callout-danger { background: var(--danger-light); border-color: var(--danger); }
+  .callout-success { background: #f0fdf4; border-color: var(--success); }
+  .callout-primary { background: var(--primary-light); border-color: var(--primary); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    background: white;
+    font-size: 14px;
+  }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--primary-light); }
+  code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--danger);
+  }
+  kbd {
+    background: #1e293b;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: monospace;
+    border-bottom: 2px solid #475569;
+  }
+  .checklist { list-style: none; padding: 0; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .checklist li:hover { background: var(--primary-light); }
+  .checklist input[type="checkbox"] {
+    margin-right: 12px;
+    margin-top: 6px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .checklist label { cursor: pointer; flex: 1; }
+  .checklist li.done label {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+  .section-progress {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-left: 12px;
+    font-weight: normal;
+  }
+  .toolbar {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  button:hover { background: var(--primary-dark); }
+  button.danger { background: var(--danger); }
+  button.secondary { background: var(--muted); }
+  .overall-progress {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+  }
+  .progress-bar {
+    background: var(--border);
+    border-radius: 20px;
+    height: 8px;
+    overflow: hidden;
+    margin: 6px 0;
+  }
+  .progress-bar-fill {
+    background: var(--success);
+    height: 100%;
+    transition: width 0.3s;
+  }
+  .note-area {
+    width: 100%;
+    min-height: 80px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    margin-top: 8px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 8px;
+  }
+  .badge-part2 { background: var(--primary); color: white; }
+  .badge-mobile { background: #06b6d4; color: white; }
+  .badge-a11y { background: #f59e0b; color: white; }
+  .badge-detail { background: var(--primary-light); color: var(--primary-dark); }
+  .example-good, .example-bad {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    margin: 6px 0;
+  }
+  .example-good { background: #f0fdf4; border-left: 3px solid var(--success); }
+  .example-bad { background: #fef2f2; border-left: 3px solid var(--danger); }
+
+  @media print {
+    .sidebar, .toolbar button, .no-print, .prod-banner, .part2-banner { display: none; }
+    main { padding: 0; }
+    h2 { background: none; color: var(--primary); border-bottom: 2px solid var(--primary); }
+  }
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; top: 0; }
+    main { padding: 20px; }
+    .prod-banner, .part2-banner { position: static; top: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="prod-banner no-print">
+  ⚠️ 本番環境での検証中。<code style="background:white;color:var(--danger);">[TEST]</code> データ以外は絶対に触らない
+</div>
+<div class="part2-banner no-print">
+  📋 PART 2 - 細部検証編 <span style="opacity:0.8;">/ Part 1 の全画面を1周終わってから進めてください</span>
+</div>
+
+<div class="layout">
+
+<aside class="sidebar no-print">
+  <h2>目次</h2>
+  <div class="overall-progress" id="overall-progress">全体: 0 / 0</div>
+  <div class="progress-bar"><div class="progress-bar-fill" id="overall-bar" style="width:0%"></div></div>
+  <ul>
+    <li><a href="#intro">1. Part 2 について</a></li>
+    <li><a href="#ui-detail">2. UI・インタラクション細部</a></li>
+    <li><a href="#form-boundary">3. フォーム境界値テスト</a></li>
+    <li><a href="#consistency">4. データ整合性チェック</a></li>
+    <li><a href="#datetime">5. 日付・時刻・数値・金額</a></li>
+    <li><a href="#sort-filter">6. ソート・フィルタ詳細</a></li>
+    <li><a href="#modal">7. モーダル・ダイアログ挙動</a></li>
+    <li><a href="#tabs-back">8. 複数タブ・ブラウザバック</a></li>
+    <li><a href="#session">9. セッション・タイムアウト</a></li>
+    <li><a href="#links">10. リンク・遷移網羅</a></li>
+    <li><a href="#mobile">11. スマホ特有の挙動</a></li>
+    <li><a href="#a11y">12. アクセシビリティ簡易</a></li>
+    <li><a href="#taslink-features">13. TasLink 固有機能の細部</a></li>
+    <li><a href="#print">14. 印刷レイアウト詳細</a></li>
+    <li><a href="#error-msg">15. エラーメッセージ網羅</a></li>
+    <li><a href="#copy-paste">16. コピペ・ドラッグ挙動</a></li>
+    <li><a href="#performance">17. 体感速度・パフォーマンス</a></li>
+    <li><a href="#visual">18. 視覚的な細部</a></li>
+    <li><a href="#record">19. 検証記録</a></li>
+  </ul>
+</aside>
+
+<main>
+
+<h1>TasLink 動作検証マニュアル Part 2 <span class="badge badge-part2">細部検証編</span></h1>
+
+<div class="callout callout-primary">
+  <strong>Part 1 は「広く1周」。Part 2 は「狭く深く」。</strong><br>
+  Part 1 で機能一通り動くことが確認できた前提で、細かい挙動・見た目・体感を掘り下げます。「あれっ、何か違和感ある」を言語化して報告するのが目的。
+</div>
+
+<div class="toolbar no-print">
+  <button onclick="window.print()">印刷 / PDF保存</button>
+  <button class="secondary" onclick="expandAllNotes()">メモ欄を全て展開</button>
+  <button class="danger" onclick="resetProgress()">進捗をリセット</button>
+</div>
+
+<!-- 1. Part 2について -->
+<h2 id="intro">1. Part 2 について</h2>
+<div class="card">
+  <h4>Part 1 との違い</h4>
+  <table>
+    <thead><tr><th>観点</th><th>Part 1（広く）</th><th>Part 2（深く）</th></tr></thead>
+    <tbody>
+      <tr><td>目的</td><td>機能が動くか</td><td>細部の挙動・体感・見た目</td></tr>
+      <tr><td>粒度</td><td>画面ごとに機能一覧</td><td>操作の1秒1秒</td></tr>
+      <tr><td>優先度</td><td>致命的バグ発見</td><td>ユーザー体験の質向上</td></tr>
+      <tr><td>所要時間</td><td>1〜2週間</td><td>1〜2週間（さらに深く）</td></tr>
+    </tbody>
+  </table>
+
+  <h4>いつ Part 2 に進むか</h4>
+  <ul>
+    <li>Part 1 の画面別チェックリストが 80% 以上完了している</li>
+    <li>致命的・高 レベルのバグ報告が概ね完了している</li>
+    <li>担当者から「Part 2 に進んでOK」と GO が出ている</li>
+  </ul>
+
+  <h4>Part 2 の進め方</h4>
+  <ol>
+    <li>本番検証ルール（Part 1 の「2. 絶対ルール」）は引き続き遵守</li>
+    <li>1日1〜2セクションを目安</li>
+    <li>「気になった」レベルの違和感も全部メモする（Part 2 は感度が命）</li>
+    <li>バグ報告の重要度は「低〜中」が多くなる。それでOK</li>
+  </ol>
+
+  <div class="callout callout-danger">
+    ⚠️ 本番検証ルール（<code>[TEST]</code> データのみ操作・実データ触らない）は Part 2 でも完全に維持してください。
+  </div>
+</div>
+
+<!-- 2. UI・インタラクション -->
+<h2 id="ui-detail">2. UI・インタラクション細部 <span class="section-progress" data-progress="ui-detail"></span></h2>
+
+<h3>2.1 ボタンの状態</h3>
+<div class="card">
+  <p>各ボタンについて、以下の <strong>4状態</strong> が正しく表示されるかチェック。</p>
+  <table>
+    <thead><tr><th>状態</th><th>確認方法</th><th>期待</th></tr></thead>
+    <tbody>
+      <tr><td>通常</td><td>何もしていない状態</td><td>ボタンだと分かる見た目</td></tr>
+      <tr><td>ホバー</td><td>マウスを重ねる</td><td>色 or 影が変わる</td></tr>
+      <tr><td>押下（アクティブ）</td><td>クリックした瞬間</td><td>凹む or 濃くなる</td></tr>
+      <tr><td>無効（disabled）</td><td>必須項目未入力時の保存ボタン等</td><td>グレーアウトしてクリック不可</td></tr>
+      <tr><td>処理中（loading）</td><td>保存ボタンを押した直後</td><td>スピナー表示 or ボタン無効化</td></tr>
+    </tbody>
+  </table>
+  <ul class="checklist" data-section="ui-detail">
+    <li><input type="checkbox" id="ui-b1"><label for="ui-b1">主要ボタン（保存・キャンセル・削除）のホバー状態が視覚的に分かる</label></li>
+    <li><input type="checkbox" id="ui-b2"><label for="ui-b2">押下時の反応がある（0.1秒でも変化があると押した実感が出る）</label></li>
+    <li><input type="checkbox" id="ui-b3"><label for="ui-b3">保存中は「保存」ボタンが押せなくなる or スピナーが出る</label></li>
+    <li><input type="checkbox" id="ui-b4"><label for="ui-b4">disabled ボタンをクリックしても何も起きない（間違って submit されない）</label></li>
+    <li><input type="checkbox" id="ui-b5"><label for="ui-b5">危険なボタン（削除等）は他の色（赤系）で目立つ</label></li>
+    <li><input type="checkbox" id="ui-b6"><label for="ui-b6">アイコンだけのボタンにマウスを重ねると説明ツールチップが出る</label></li>
+  </ul>
+</div>
+
+<h3>2.2 フォーカス表示・キーボード操作</h3>
+<div class="card">
+  <p><kbd>Tab</kbd> キーで画面内を移動していったとき、今どこにフォーカスがあるかが明確か。</p>
+  <ul class="checklist" data-section="ui-detail">
+    <li><input type="checkbox" id="ui-k1"><label for="ui-k1"><kbd>Tab</kbd> でフォーカスが移動する順序が自然（上から下・左から右）</label></li>
+    <li><input type="checkbox" id="ui-k2"><label for="ui-k2">フォーカスされた項目に枠 or 色の変化がある（見失わない）</label></li>
+    <li><input type="checkbox" id="ui-k3"><label for="ui-k3">フォームで <kbd>Enter</kbd> を押すと「保存」が実行される（意図した挙動）</label></li>
+    <li><input type="checkbox" id="ui-k4"><label for="ui-k4">モーダルで <kbd>Esc</kbd> キーを押すと閉じる</label></li>
+    <li><input type="checkbox" id="ui-k5"><label for="ui-k5">検索欄で <kbd>Enter</kbd> を押すと検索実行</label></li>
+    <li><input type="checkbox" id="ui-k6"><label for="ui-k6"><kbd>Shift</kbd> + <kbd>Tab</kbd> で逆順に戻れる</label></li>
+    <li><input type="checkbox" id="ui-k7"><label for="ui-k7">ドロップダウンを開いた状態で矢印キーで選択肢を移動できる</label></li>
+    <li><input type="checkbox" id="ui-k8"><label for="ui-k8">チェックボックスをスペースキーで ON/OFF できる</label></li>
+  </ul>
+</div>
+
+<h3>2.3 ローディング表示</h3>
+<div class="card">
+  <p>データ取得中・保存中の待ち時間の見せ方。</p>
+  <ul class="checklist" data-section="ui-detail">
+    <li><input type="checkbox" id="ui-l1"><label for="ui-l1">画面遷移直後、データ読込中はスピナー or スケルトン UI が表示される</label></li>
+    <li><input type="checkbox" id="ui-l2"><label for="ui-l2">保存中に「保存中...」等の表示があり、いつ完了したか分かる</label></li>
+    <li><input type="checkbox" id="ui-l3"><label for="ui-l3">保存完了時にトースト（画面右上等の通知）が出る</label></li>
+    <li><input type="checkbox" id="ui-l4"><label for="ui-l4">トーストが自動で消える（3〜5秒程度）</label></li>
+    <li><input type="checkbox" id="ui-l5"><label for="ui-l5">トーストを × ボタンで手動で閉じられる</label></li>
+    <li><input type="checkbox" id="ui-l6"><label for="ui-l6">複数の操作を連続でやってもトーストが積み重なる（前のが消える前に次のが出る）</label></li>
+    <li><input type="checkbox" id="ui-l7"><label for="ui-l7">エラー時のトーストは赤系、成功時は緑系で区別できる</label></li>
+  </ul>
+</div>
+
+<h3>2.4 ホバー時の細かい挙動</h3>
+<div class="card">
+  <ul class="checklist" data-section="ui-detail">
+    <li><input type="checkbox" id="ui-h1"><label for="ui-h1">一覧の行にマウスを重ねると背景色が変わる（クリックできると分かる）</label></li>
+    <li><input type="checkbox" id="ui-h2"><label for="ui-h2">リンクにマウスを重ねると下線 or 色が変わる</label></li>
+    <li><input type="checkbox" id="ui-h3"><label for="ui-h3">切り詰めされた長い文字（<code>...</code> 省略）にマウスを重ねると全文がツールチップで見える</label></li>
+    <li><input type="checkbox" id="ui-h4"><label for="ui-h4">アイコン（?, i, ⚙️ 等）にマウスを重ねると意味の説明が出る</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="ui-detail" placeholder="UI細部で気になったこと..."></textarea>
+
+<!-- 3. フォーム境界値 -->
+<h2 id="form-boundary">3. フォーム境界値テスト <span class="section-progress" data-progress="form-boundary"></span></h2>
+
+<div class="callout callout-warn">
+  すべて <code>[TEST]</code> データで実施。実データ入力欄に境界値を入れないこと。
+</div>
+
+<h3>3.1 文字数の境界</h3>
+<div class="card">
+  <p>各入力欄の文字数上限・下限を探るテスト。</p>
+  <table>
+    <thead><tr><th>対象欄</th><th>試す値</th><th>期待</th></tr></thead>
+    <tbody>
+      <tr><td>氏名</td><td>1文字（例: <code>[TEST]あ</code>）</td><td>保存できる or エラー</td></tr>
+      <tr><td>氏名</td><td>50文字</td><td>保存できる or 「50文字以内」エラー</td></tr>
+      <tr><td>氏名</td><td>100文字</td><td>エラーか自動切り詰め</td></tr>
+      <tr><td>フリガナ</td><td>ひらがなを入れる</td><td>カタカナ強制 or そのまま保存</td></tr>
+      <tr><td>電話番号</td><td>10桁 <code>0000000001</code></td><td>ハイフン自動挿入 or エラー</td></tr>
+      <tr><td>電話番号</td><td>11桁 <code>00000000001</code></td><td>保存できる</td></tr>
+      <tr><td>電話番号</td><td>12桁以上</td><td>エラー</td></tr>
+      <tr><td>メール</td><td><code>a@b.c</code>（超短い）</td><td>保存 or 形式エラー</td></tr>
+      <tr><td>メール</td><td><code>test@example.com</code></td><td>保存</td></tr>
+      <tr><td>メール</td><td><code>test@</code>（不完全）</td><td>エラー</td></tr>
+      <tr><td>備考・メモ</td><td>1000文字の長文</td><td>保存できる・改行が保持される</td></tr>
+    </tbody>
+  </table>
+  <ul class="checklist" data-section="form-boundary">
+    <li><input type="checkbox" id="fb-c1"><label for="fb-c1">氏名の文字数上限を確認（何文字までOKか）</label></li>
+    <li><input type="checkbox" id="fb-c2"><label for="fb-c2">上限超えのエラーメッセージが分かりやすい</label></li>
+    <li><input type="checkbox" id="fb-c3"><label for="fb-c3">電話番号のハイフン有り無しどちらも動く</label></li>
+    <li><input type="checkbox" id="fb-c4"><label for="fb-c4">メール形式チェックが動く</label></li>
+    <li><input type="checkbox" id="fb-c5"><label for="fb-c5">メモ欄の改行が保存後も維持される</label></li>
+  </ul>
+</div>
+
+<h3>3.2 数値・金額の境界</h3>
+<div class="card">
+  <p>案件の時給、施設の郵便番号など数値項目のテスト。</p>
+  <ul class="checklist" data-section="form-boundary">
+    <li><input type="checkbox" id="fb-n1"><label for="fb-n1">時給に <code>0</code> を入れて保存を試す（許可 or エラー）</label></li>
+    <li><input type="checkbox" id="fb-n2"><label for="fb-n2">時給に <code>-1000</code>（マイナス）を入れる → エラーになる</label></li>
+    <li><input type="checkbox" id="fb-n3"><label for="fb-n3">時給に <code>999999</code>（大きい値）を入れる</label></li>
+    <li><input type="checkbox" id="fb-n4"><label for="fb-n4">時給に <code>1500.5</code>（小数点）を入れる → 拒否 or 切り捨て</label></li>
+    <li><input type="checkbox" id="fb-n5"><label for="fb-n5">時給に日本語 <code>千五百円</code> を入れる → エラー</label></li>
+    <li><input type="checkbox" id="fb-n6"><label for="fb-n6">時給に全角数字 <code>１５００</code> を入れる → 半角変換 or エラー</label></li>
+  </ul>
+</div>
+
+<h3>3.3 日付の境界</h3>
+<div class="card">
+  <ul class="checklist" data-section="form-boundary">
+    <li><input type="checkbox" id="fb-d1"><label for="fb-d1">生年月日に <code>1900/01/01</code>（超古い）を入れる → 保存 or 警告</label></li>
+    <li><input type="checkbox" id="fb-d2"><label for="fb-d2">生年月日に <code>2050/01/01</code>（未来）を入れる → エラー</label></li>
+    <li><input type="checkbox" id="fb-d3"><label for="fb-d3">生年月日に <code>2000/02/29</code>（うるう年）→ 保存OK</label></li>
+    <li><input type="checkbox" id="fb-d4"><label for="fb-d4">生年月日に <code>2001/02/29</code>（存在しない日）→ エラー</label></li>
+    <li><input type="checkbox" id="fb-d5"><label for="fb-d5">日付欄に直接テキスト入力できる（カレンダーだけでなく）</label></li>
+    <li><input type="checkbox" id="fb-d6"><label for="fb-d6">日付欄のフォーマット（YYYY/MM/DD or YYYY-MM-DD 等）が統一</label></li>
+    <li><input type="checkbox" id="fb-d7"><label for="fb-d7">タスクの期限日に「今日」を入れられる</label></li>
+    <li><input type="checkbox" id="fb-d8"><label for="fb-d8">提案日を「明日」にすると警告 or 通常保存</label></li>
+  </ul>
+</div>
+
+<h3>3.4 前後スペース・特殊文字</h3>
+<div class="card">
+  <ul class="checklist" data-section="form-boundary">
+    <li><input type="checkbox" id="fb-s1"><label for="fb-s1">氏名の前後にスペースを入れて保存 → trim（除去）される or そのまま</label></li>
+    <li><input type="checkbox" id="fb-s2"><label for="fb-s2">氏名にタブ文字を入れる → エラーか除去</label></li>
+    <li><input type="checkbox" id="fb-s3"><label for="fb-s3">氏名に絵文字 🎉 を入れる → 保存できる or エラー</label></li>
+    <li><input type="checkbox" id="fb-s4"><label for="fb-s4">氏名に半角・全角スペース混在 → 適切に処理</label></li>
+    <li><input type="checkbox" id="fb-s5"><label for="fb-s5">住所に長い記号列（<code>─────</code>）→ 表示崩れなし</label></li>
+    <li><input type="checkbox" id="fb-s6"><label for="fb-s6">改行を含む文字列を保存 → 一覧表示で崩れない（改行が反映 or 除去）</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="form-boundary" placeholder="境界値テストで気になったこと..."></textarea>
+
+<!-- 4. データ整合性 -->
+<h2 id="consistency">4. データ整合性チェック <span class="section-progress" data-progress="consistency"></span></h2>
+
+<div class="card">
+  <p>同じデータが複数画面で正しく表示されているか。編集後、他の画面にも反映されているか。</p>
+
+  <h4>4.1 一覧 ↔ 詳細の整合性</h4>
+  <ul class="checklist" data-section="consistency">
+    <li><input type="checkbox" id="co-1"><label for="co-1">[TEST] ワーカー一覧の氏名 = 詳細画面の氏名（完全一致）</label></li>
+    <li><input type="checkbox" id="co-2"><label for="co-2">一覧の電話番号 = 詳細の電話番号</label></li>
+    <li><input type="checkbox" id="co-3"><label for="co-3">一覧のステータス = 詳細のステータス</label></li>
+    <li><input type="checkbox" id="co-4"><label for="co-4">一覧のタグ = 詳細のタグ（数・種類・順序）</label></li>
+    <li><input type="checkbox" id="co-5"><label for="co-5">案件一覧の時給 = 詳細の時給</label></li>
+    <li><input type="checkbox" id="co-6"><label for="co-6">施設一覧の住所 = 詳細の住所</label></li>
+  </ul>
+
+  <h4>4.2 編集後の反映</h4>
+  <ul class="checklist" data-section="consistency">
+    <li><input type="checkbox" id="co-7"><label for="co-7">[TEST] ワーカー編集で氏名変更 → 詳細ですぐ反映</label></li>
+    <li><input type="checkbox" id="co-8"><label for="co-8">戻るボタンで一覧に戻ったとき、編集内容が反映されている</label></li>
+    <li><input type="checkbox" id="co-9"><label for="co-9">別タブで開いてリロード → 最新値になる</label></li>
+    <li><input type="checkbox" id="co-10"><label for="co-10">ステータス変更 → ダッシュボードKPIが更新（数分後 or 即時）</label></li>
+    <li><input type="checkbox" id="co-11"><label for="co-11">タグを削除 → タグを持っていた [TEST] ワーカーから消える</label></li>
+  </ul>
+
+  <h4>4.3 関連データの整合性</h4>
+  <ul class="checklist" data-section="consistency">
+    <li><input type="checkbox" id="co-12"><label for="co-12">[TEST] ワーカーに提案を作ると、案件詳細の「提案一覧」に出る</label></li>
+    <li><input type="checkbox" id="co-13"><label for="co-13">[TEST] 案件に紐づく [TEST] 施設を、施設詳細から辿れる</label></li>
+    <li><input type="checkbox" id="co-14"><label for="co-14">施設詳細の「紐づく案件」に、その施設で作った [TEST] 案件が出る</label></li>
+    <li><input type="checkbox" id="co-15"><label for="co-15">ワーカーの提案履歴と、案件側の提案一覧が同じ状態を示している</label></li>
+    <li><input type="checkbox" id="co-16"><label for="co-16">連絡履歴のタイムラインとワーカー詳細の連絡履歴タブが一致</label></li>
+  </ul>
+
+  <h4>4.4 集計値の整合性</h4>
+  <ul class="checklist" data-section="consistency">
+    <li><input type="checkbox" id="co-17"><label for="co-17">ダッシュボード「稼働中」の数 = /workers でステータス「稼働中」で絞った件数</label></li>
+    <li><input type="checkbox" id="co-18"><label for="co-18">タグ管理の「使用数」= そのタグを持つワーカー数</label></li>
+    <li><input type="checkbox" id="co-19"><label for="co-19">施設詳細の「紐づく案件数」= 実際の紐づく案件数</label></li>
+    <li><input type="checkbox" id="co-20"><label for="co-20">ページネーションの「全 XX 件」= 実際の件数</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="consistency" placeholder="整合性で気になったこと..."></textarea>
+
+<!-- 5. 日付・時刻・数値・金額 -->
+<h2 id="datetime">5. 日付・時刻・数値・金額の表示 <span class="section-progress" data-progress="datetime"></span></h2>
+
+<h3>5.1 日付表示のフォーマット統一</h3>
+<div class="card">
+  <p>同じ「日付」でも画面によってフォーマットが違うと違和感が出ます。</p>
+  <ul class="checklist" data-section="datetime">
+    <li><input type="checkbox" id="dt-1"><label for="dt-1">全画面で日付フォーマットが統一（例: 全部 <code>2026/09/14</code>、または <code>2026年9月14日</code>）</label></li>
+    <li><input type="checkbox" id="dt-2"><label for="dt-2">「2026年9月14日」と「2026/9/14」が混在していない</label></li>
+    <li><input type="checkbox" id="dt-3"><label for="dt-3">1桁月・日のゼロ埋め（<code>09/01</code> vs <code>9/1</code>）が統一</label></li>
+    <li><input type="checkbox" id="dt-4"><label for="dt-4">時刻が必要な場合は <code>HH:MM</code> で統一</label></li>
+    <li><input type="checkbox" id="dt-5"><label for="dt-5">秒まで出ている画面がないか（大抵不要）</label></li>
+  </ul>
+</div>
+
+<h3>5.2 相対時間の表示</h3>
+<div class="card">
+  <ul class="checklist" data-section="datetime">
+    <li><input type="checkbox" id="dt-6"><label for="dt-6">「3日前」「1週間前」等の相対表示が正しい</label></li>
+    <li><input type="checkbox" id="dt-7"><label for="dt-7">「今」「たった今」が数秒〜数分の範囲で正しく出る</label></li>
+    <li><input type="checkbox" id="dt-8"><label for="dt-8">古すぎるもの（1年以上前）は絶対日付になっている</label></li>
+    <li><input type="checkbox" id="dt-9"><label for="dt-9">未来日付（次回アクション日）の表示が「あと3日」等で分かりやすい</label></li>
+    <li><input type="checkbox" id="dt-10"><label for="dt-10">相対時間のマウスホバーで絶対日時が出る（ツールチップ）</label></li>
+  </ul>
+</div>
+
+<h3>5.3 金額・数値の表示</h3>
+<div class="card">
+  <ul class="checklist" data-section="datetime">
+    <li><input type="checkbox" id="dt-11"><label for="dt-11">時給表示にカンマ区切り（例: <code>1,500円</code>）</label></li>
+    <li><input type="checkbox" id="dt-12"><label for="dt-12">通貨記号の位置が統一（¥1,500 or 1,500円）</label></li>
+    <li><input type="checkbox" id="dt-13"><label for="dt-13">大きな数字（10,000件）もカンマ区切り</label></li>
+    <li><input type="checkbox" id="dt-14"><label for="dt-14">パーセント表示は <code>50%</code> or <code>50 %</code>（統一）</label></li>
+    <li><input type="checkbox" id="dt-15"><label for="dt-15">単位が明記されている（<code>3</code> ではなく <code>3件</code> や <code>3人</code>）</label></li>
+    <li><input type="checkbox" id="dt-16"><label for="dt-16">0件・0人・0円の表示が「-」でなく <code>0件</code> と数字で出ている</label></li>
+  </ul>
+</div>
+
+<h3>5.4 タイムゾーン</h3>
+<div class="card">
+  <ul class="checklist" data-section="datetime">
+    <li><input type="checkbox" id="dt-17"><label for="dt-17">保存直後の「更新日時」が現在時刻と一致（JSTで）</label></li>
+    <li><input type="checkbox" id="dt-18"><label for="dt-18">時刻が UTC 表示になっていない（<code>2026-09-14T05:00:00Z</code> のような）</label></li>
+    <li><input type="checkbox" id="dt-19"><label for="dt-19">日付境界（0時前後）の作業でも「日付」がずれない</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="datetime" placeholder="日付・数値表示で気になったこと..."></textarea>
+
+<!-- 6. ソート・フィルタ -->
+<h2 id="sort-filter">6. ソート・フィルタ詳細 <span class="section-progress" data-progress="sort-filter"></span></h2>
+
+<div class="card">
+  <h4>6.1 ソートの詳細</h4>
+  <ul class="checklist" data-section="sort-filter">
+    <li><input type="checkbox" id="sf-1"><label for="sf-1">カラム見出しをクリックしてソートできる（可能な場合）</label></li>
+    <li><input type="checkbox" id="sf-2"><label for="sf-2">昇順・降順の矢印が表示される</label></li>
+    <li><input type="checkbox" id="sf-3"><label for="sf-3">2回クリックで逆順になる</label></li>
+    <li><input type="checkbox" id="sf-4"><label for="sf-4">3回目でソート解除 or 昇順に戻る</label></li>
+    <li><input type="checkbox" id="sf-5"><label for="sf-5">氏名ソート: 五十音順で正しい（あ→ん）</label></li>
+    <li><input type="checkbox" id="sf-6"><label for="sf-6">カタカナ・ひらがな混在のソート順が自然</label></li>
+    <li><input type="checkbox" id="sf-7"><label for="sf-7">数値ソート: 1000 が 999 より後に来る（文字列ソート <code>999, 1000</code> ではなく数値ソート）</label></li>
+    <li><input type="checkbox" id="sf-8"><label for="sf-8">日付ソート: 新しい順・古い順が正しい</label></li>
+    <li><input type="checkbox" id="sf-9"><label for="sf-9">null（未入力）値の位置が一貫（最後 or 最初）</label></li>
+    <li><input type="checkbox" id="sf-10"><label for="sf-10">ソート状態がページ移動時に保持される</label></li>
+  </ul>
+
+  <h4>6.2 フィルタの組み合わせ</h4>
+  <ul class="checklist" data-section="sort-filter">
+    <li><input type="checkbox" id="sf-11"><label for="sf-11">複数フィルタが AND 条件で動く</label></li>
+    <li><input type="checkbox" id="sf-12"><label for="sf-12">フィルタとキーワード検索を同時にできる</label></li>
+    <li><input type="checkbox" id="sf-13"><label for="sf-13">フィルタとソートを同時にできる</label></li>
+    <li><input type="checkbox" id="sf-14"><label for="sf-14">「フィルタをすべてクリア」ボタンがある or 個別解除できる</label></li>
+    <li><input type="checkbox" id="sf-15"><label for="sf-15">現在適用中のフィルタが目に見える形（バッジ・タグ）で表示される</label></li>
+    <li><input type="checkbox" id="sf-16"><label for="sf-16">フィルタ結果0件のときも「フィルタを解除」への導線がある</label></li>
+  </ul>
+
+  <h4>6.3 URL への反映</h4>
+  <ul class="checklist" data-section="sort-filter">
+    <li><input type="checkbox" id="sf-17"><label for="sf-17">検索・フィルタ条件が URL パラメータに反映される（<code>?search=TEST&status=active</code> 等）</label></li>
+    <li><input type="checkbox" id="sf-18"><label for="sf-18">URL をコピペして別タブで開くと同じ結果</label></li>
+    <li><input type="checkbox" id="sf-19"><label for="sf-19">リロードしても検索条件が失われない</label></li>
+    <li><input type="checkbox" id="sf-20"><label for="sf-20">ブラウザの戻るで前の検索条件に戻る</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="sort-filter" placeholder="ソート・フィルタで気になったこと..."></textarea>
+
+<!-- 7. モーダル -->
+<h2 id="modal">7. モーダル・ダイアログの挙動 <span class="section-progress" data-progress="modal"></span></h2>
+
+<div class="card">
+  <h4>7.1 開閉の挙動</h4>
+  <ul class="checklist" data-section="modal">
+    <li><input type="checkbox" id="mo-1"><label for="mo-1">モーダルの外側（背景）をクリックすると閉じる（設定次第）</label></li>
+    <li><input type="checkbox" id="mo-2"><label for="mo-2">未保存の入力があるモーダルで背景クリック → 確認ダイアログ or 閉じない</label></li>
+    <li><input type="checkbox" id="mo-3"><label for="mo-3"><kbd>Esc</kbd> キーで閉じる</label></li>
+    <li><input type="checkbox" id="mo-4"><label for="mo-4">閉じるボタン（×）が右上にある</label></li>
+    <li><input type="checkbox" id="mo-5"><label for="mo-5">モーダルを閉じた後、背景の画面が正しく操作できる（クリック無効化解除）</label></li>
+    <li><input type="checkbox" id="mo-6"><label for="mo-6">モーダル open 時に背景のスクロールが止まる</label></li>
+  </ul>
+
+  <h4>7.2 中身の挙動</h4>
+  <ul class="checklist" data-section="modal">
+    <li><input type="checkbox" id="mo-7"><label for="mo-7">モーダル open 時、最初の入力欄に自動フォーカス</label></li>
+    <li><input type="checkbox" id="mo-8"><label for="mo-8">モーダル内で <kbd>Tab</kbd> が背景ではなくモーダル内をループする</label></li>
+    <li><input type="checkbox" id="mo-9"><label for="mo-9">モーダルの高さが画面より大きいときスクロールできる</label></li>
+    <li><input type="checkbox" id="mo-10"><label for="mo-10">スマホ画面でモーダルが画面幅に収まる</label></li>
+    <li><input type="checkbox" id="mo-11"><label for="mo-11">モーダル内のフォームでもバリデーションが動く</label></li>
+    <li><input type="checkbox" id="mo-12"><label for="mo-12">保存成功時、モーダルが自動で閉じる</label></li>
+    <li><input type="checkbox" id="mo-13"><label for="mo-13">保存失敗時、モーダルは閉じずエラーが出る</label></li>
+  </ul>
+
+  <h4>7.3 確認ダイアログの文言</h4>
+  <ul class="checklist" data-section="modal">
+    <li><input type="checkbox" id="mo-14"><label for="mo-14">削除確認で「本当に削除しますか？」等、危険性が伝わる文言</label></li>
+    <li><input type="checkbox" id="mo-15"><label for="mo-15">影響範囲（<code>紐づく提案 3件も削除されます</code>）が明記</label></li>
+    <li><input type="checkbox" id="mo-16"><label for="mo-16">キャンセルボタンの方が「削除」より押しやすい位置</label></li>
+    <li><input type="checkbox" id="mo-17"><label for="mo-17">「削除」ボタンが赤系で警戒色</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="modal" placeholder="モーダルで気になったこと..."></textarea>
+
+<!-- 8. 複数タブ -->
+<h2 id="tabs-back">8. 複数タブ・ブラウザバック <span class="section-progress" data-progress="tabs-back"></span></h2>
+
+<div class="card">
+  <ul class="checklist" data-section="tabs-back">
+    <li><input type="checkbox" id="tb-1"><label for="tb-1">2つのタブで同じ [TEST] ワーカーを開き、片方で編集 → もう片方でリロードすると最新値</label></li>
+    <li><input type="checkbox" id="tb-2"><label for="tb-2">タブAで [TEST] を編集中、タブBでログアウト → タブAは次操作でログイン画面へ</label></li>
+    <li><input type="checkbox" id="tb-3"><label for="tb-3">タブAで新規作成中、タブBで同じ画面を開いても双方動く</label></li>
+    <li><input type="checkbox" id="tb-4"><label for="tb-4">フォーム入力中にブラウザバック → 入力値が保持される or 確認</label></li>
+    <li><input type="checkbox" id="tb-5"><label for="tb-5">検索結果ページからワーカー詳細に遷移 → 戻るで検索結果に戻れる（条件保持）</label></li>
+    <li><input type="checkbox" id="tb-6"><label for="tb-6">ワーカー詳細で編集 → 保存 → 戻る → 一覧が最新状態</label></li>
+    <li><input type="checkbox" id="tb-7"><label for="tb-7">戻るボタン連打で意図しない挙動が起きない</label></li>
+    <li><input type="checkbox" id="tb-8"><label for="tb-8">シークレットウィンドウで別ユーザーとしてログインしても、既存タブに影響なし</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="tabs-back" placeholder="タブ・戻るで気になったこと..."></textarea>
+
+<!-- 9. セッション -->
+<h2 id="session">9. セッション・タイムアウト <span class="section-progress" data-progress="session"></span></h2>
+
+<div class="card">
+  <p>長時間の放置と再開のテスト。<strong>離席前に検証を仕込んでおく</strong>のがコツ。</p>
+  <ul class="checklist" data-section="session">
+    <li><input type="checkbox" id="ss-1"><label for="ss-1">ログイン状態で 30分放置 → 操作するとログイン維持 or 再ログイン誘導</label></li>
+    <li><input type="checkbox" id="ss-2"><label for="ss-2">1時間放置後、フォーム保存 → 適切なエラー or 再ログインへ</label></li>
+    <li><input type="checkbox" id="ss-3"><label for="ss-3">数時間放置後、リロード → ログイン画面へ or 状態復元</label></li>
+    <li><input type="checkbox" id="ss-4"><label for="ss-4">タイムアウト後にログインすると、直前の画面 or ダッシュボードに戻る</label></li>
+    <li><input type="checkbox" id="ss-5"><label for="ss-5">セッション切れ時のエラーメッセージが分かりやすい（<code>Unauthorized</code> だけはNG）</label></li>
+    <li><input type="checkbox" id="ss-6"><label for="ss-6">ブラウザを閉じて再度開いたときの挙動（ログイン維持 or 再ログイン）</label></li>
+    <li><input type="checkbox" id="ss-7"><label for="ss-7">スマホでバックグラウンドに回した後、戻したときの挙動</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="session" placeholder="セッションで気になったこと..."></textarea>
+
+<!-- 10. リンク網羅 -->
+<h2 id="links">10. リンク・遷移の網羅性 <span class="section-progress" data-progress="links"></span></h2>
+
+<div class="card">
+  <p>画面内の <strong>すべての</strong> リンクを1個ずつクリックして遷移先を確認。</p>
+
+  <h4>10.1 サイドバー・ヘッダー</h4>
+  <ul class="checklist" data-section="links">
+    <li><input type="checkbox" id="ln-1"><label for="ln-1">サイドバー全リンク（ダッシュボード・ワーカー・タスク・案件・施設・マップ・設定）が正しい画面へ</label></li>
+    <li><input type="checkbox" id="ln-2"><label for="ln-2">ロゴ・アプリ名クリックでダッシュボードへ</label></li>
+    <li><input type="checkbox" id="ln-3"><label for="ln-3">ユーザーメニュー（右上等）のログアウトが動く</label></li>
+    <li><input type="checkbox" id="ln-4"><label for="ln-4">現在のページがサイドバーで強調表示される</label></li>
+  </ul>
+
+  <h4>10.2 パンくずリスト</h4>
+  <ul class="checklist" data-section="links">
+    <li><input type="checkbox" id="ln-5"><label for="ln-5">パンくずリストが表示される（詳細画面等で）</label></li>
+    <li><input type="checkbox" id="ln-6"><label for="ln-6">パンくずの各リンクが正しい画面へ</label></li>
+    <li><input type="checkbox" id="ln-7"><label for="ln-7">現在ページはリンクではなくテキストで表示</label></li>
+  </ul>
+
+  <h4>10.3 詳細画面内のクロスリンク</h4>
+  <ul class="checklist" data-section="links">
+    <li><input type="checkbox" id="ln-8"><label for="ln-8">ワーカー詳細 → 提案 → 案件詳細 の遷移</label></li>
+    <li><input type="checkbox" id="ln-9"><label for="ln-9">案件詳細 → 紐づく施設 の遷移</label></li>
+    <li><input type="checkbox" id="ln-10"><label for="ln-10">施設詳細 → 紐づく案件 の遷移</label></li>
+    <li><input type="checkbox" id="ln-11"><label for="ln-11">タスク一覧 → 紐づくワーカー の遷移</label></li>
+    <li><input type="checkbox" id="ln-12"><label for="ln-12">連絡履歴タイムライン → ワーカー詳細</label></li>
+    <li><input type="checkbox" id="ln-13"><label for="ln-13">ダッシュボード KPIカード → 該当ワーカー一覧（絞り込み済）</label></li>
+    <li><input type="checkbox" id="ln-14"><label for="ln-14">マップのピン → 各詳細画面</label></li>
+  </ul>
+
+  <h4>10.4 リンクの新規タブ挙動</h4>
+  <ul class="checklist" data-section="links">
+    <li><input type="checkbox" id="ln-15"><label for="ln-15"><kbd>Ctrl</kbd> + クリック（Mac: <kbd>Cmd</kbd>）で新規タブで開ける</label></li>
+    <li><input type="checkbox" id="ln-16"><label for="ln-16">中クリックで新規タブで開ける</label></li>
+    <li><input type="checkbox" id="ln-17"><label for="ln-17">右クリック → 新規タブで開くが動く</label></li>
+    <li><input type="checkbox" id="ln-18"><label for="ln-18">外部リンク（あれば）は <code>target="_blank"</code> で新規タブ</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="links" placeholder="リンクで気になったこと..."></textarea>
+
+<!-- 11. スマホ -->
+<h2 id="mobile">11. スマホ特有の挙動 <span class="section-progress" data-progress="mobile"></span> <span class="badge badge-mobile">MOBILE</span></h2>
+
+<div class="card">
+  <p>実機（iPhone/Android）で確認するのが理想。</p>
+
+  <h4>11.1 タップ・スワイプ</h4>
+  <ul class="checklist" data-section="mobile">
+    <li><input type="checkbox" id="mb-1"><label for="mb-1">ボタン・リンクのタップ領域が指で押しやすい（最低 44×44px 目安）</label></li>
+    <li><input type="checkbox" id="mb-2"><label for="mb-2">誤タップしやすい配置になっていない（削除ボタンが保存ボタンの隣、等）</label></li>
+    <li><input type="checkbox" id="mb-3"><label for="mb-3">長押しでコピー可能なテキスト（電話番号・住所）はコピーできる</label></li>
+    <li><input type="checkbox" id="mb-4"><label for="mb-4">スワイプ操作（あれば）が意図通り動く</label></li>
+    <li><input type="checkbox" id="mb-5"><label for="mb-5">プルツーリフレッシュ（下に引く）で誤動作しない</label></li>
+  </ul>
+
+  <h4>11.2 ソフトキーボード</h4>
+  <ul class="checklist" data-section="mobile">
+    <li><input type="checkbox" id="mb-6"><label for="mb-6">入力欄をタップするとキーボードが出て、その入力欄が隠れない（自動スクロール）</label></li>
+    <li><input type="checkbox" id="mb-7"><label for="mb-7">電話番号欄をタップすると数字キーボードが出る</label></li>
+    <li><input type="checkbox" id="mb-8"><label for="mb-8">メール欄をタップするとメール用キーボード（@ が押しやすい）</label></li>
+    <li><input type="checkbox" id="mb-9"><label for="mb-9">キーボードの「完了」でフォーカスが外れる</label></li>
+    <li><input type="checkbox" id="mb-10"><label for="mb-10">キーボード表示中にモーダルの保存ボタンが押せる</label></li>
+  </ul>
+
+  <h4>11.3 画面回転</h4>
+  <ul class="checklist" data-section="mobile">
+    <li><input type="checkbox" id="mb-11"><label for="mb-11">縦→横に回転してもレイアウトが崩れない</label></li>
+    <li><input type="checkbox" id="mb-12"><label for="mb-12">横→縦に戻して入力を続けられる</label></li>
+    <li><input type="checkbox" id="mb-13"><label for="mb-13">回転で入力中の値が消えない</label></li>
+  </ul>
+
+  <h4>11.4 メニュー・ナビゲーション</h4>
+  <ul class="checklist" data-section="mobile">
+    <li><input type="checkbox" id="mb-14"><label for="mb-14">ハンバーガーメニュー（☰）が表示される</label></li>
+    <li><input type="checkbox" id="mb-15"><label for="mb-15">ハンバーガーメニューを開けてリンクをタップできる</label></li>
+    <li><input type="checkbox" id="mb-16"><label for="mb-16">メニュー外をタップで閉じる</label></li>
+    <li><input type="checkbox" id="mb-17"><label for="mb-17">スクロール時にヘッダーが追従 or 隠れる（意図した動き）</label></li>
+    <li><input type="checkbox" id="mb-18"><label for="mb-18">スマホで28日カレンダーグリッドが操作可能（横スクロール等）</label></li>
+    <li><input type="checkbox" id="mb-19"><label for="mb-19">スマホで地図のピンチイン・アウトが動く</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="mobile" placeholder="スマホで気になったこと..."></textarea>
+
+<!-- 12. アクセシビリティ -->
+<h2 id="a11y">12. アクセシビリティ簡易チェック <span class="section-progress" data-progress="a11y"></span> <span class="badge badge-a11y">A11Y</span></h2>
+
+<div class="card">
+  <p>視覚・操作の障害を持つ方でも使えるかの基本チェック。</p>
+
+  <h4>12.1 コントラスト（見やすさ）</h4>
+  <ul class="checklist" data-section="a11y">
+    <li><input type="checkbox" id="a-1"><label for="a-1">白背景の文字が薄すぎない（グレー文字も読める）</label></li>
+    <li><input type="checkbox" id="a-2"><label for="a-2">プレースホルダー（薄いグレー）と実際の入力値が区別できる</label></li>
+    <li><input type="checkbox" id="a-3"><label for="a-3">タグの色 × 文字色の組み合わせが読める</label></li>
+    <li><input type="checkbox" id="a-4"><label for="a-4">エラー赤色が背景と十分区別できる</label></li>
+  </ul>
+
+  <h4>12.2 キーボード操作のみ</h4>
+  <p>マウスを一切使わず、<kbd>Tab</kbd>・<kbd>Enter</kbd>・<kbd>Esc</kbd>・矢印キーだけで以下ができるか。</p>
+  <ul class="checklist" data-section="a11y">
+    <li><input type="checkbox" id="a-5"><label for="a-5">ログインできる</label></li>
+    <li><input type="checkbox" id="a-6"><label for="a-6">サイドバーからワーカー一覧に遷移できる</label></li>
+    <li><input type="checkbox" id="a-7"><label for="a-7">一覧から [TEST] ワーカー詳細を開ける</label></li>
+    <li><input type="checkbox" id="a-8"><label for="a-8">[TEST] ワーカーの新規登録フォームを全部入力・保存できる</label></li>
+    <li><input type="checkbox" id="a-9"><label for="a-9">モーダルの操作（開く・入力・保存・閉じる）ができる</label></li>
+    <li><input type="checkbox" id="a-10"><label for="a-10">ドロップダウン（ステータス選択等）を矢印キーで選べる</label></li>
+  </ul>
+
+  <h4>12.3 意味のある文言</h4>
+  <ul class="checklist" data-section="a11y">
+    <li><input type="checkbox" id="a-11"><label for="a-11">アイコンだけのボタンにも tooltip/aria-label がある（マウスホバーで説明が出る）</label></li>
+    <li><input type="checkbox" id="a-12"><label for="a-12">画像に代替テキスト（alt）がある（右クリック → 画像を検証で確認できる）</label></li>
+    <li><input type="checkbox" id="a-13"><label for="a-13">「クリック」ではなく「保存」等の動作を示す文言</label></li>
+  </ul>
+
+  <h4>12.4 拡大表示</h4>
+  <ul class="checklist" data-section="a11y">
+    <li><input type="checkbox" id="a-14"><label for="a-14">ブラウザで <kbd>Ctrl</kbd> + <kbd>+</kbd> で200%に拡大しても操作できる</label></li>
+    <li><input type="checkbox" id="a-15"><label for="a-15">拡大時にレイアウトが崩れない</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="a11y" placeholder="アクセシビリティで気になったこと..."></textarea>
+
+<!-- 13. TasLink 固有 -->
+<h2 id="taslink-features">13. TasLink 固有機能の細部 <span class="section-progress" data-progress="taslink-features"></span></h2>
+
+<h3>13.1 稼働可能日 28日グリッド</h3>
+<div class="card">
+  <ul class="checklist" data-section="taslink-features">
+    <li><input type="checkbox" id="tl-1"><label for="tl-1">28日のスタート日が「今日」から始まっている</label></li>
+    <li><input type="checkbox" id="tl-2"><label for="tl-2">曜日ラベル（月火水...）が正しい位置</label></li>
+    <li><input type="checkbox" id="tl-3"><label for="tl-3">土日が色分けされている</label></li>
+    <li><input type="checkbox" id="tl-4"><label for="tl-4">祝日が色分けされている（対応してれば）</label></li>
+    <li><input type="checkbox" id="tl-5"><label for="tl-5">日付をタップで状態変更（可・不可・要相談 等）できる</label></li>
+    <li><input type="checkbox" id="tl-6"><label for="tl-6">状態変更が即座に保存される（保存ボタン不要 or 保存で確定）</label></li>
+    <li><input type="checkbox" id="tl-7"><label for="tl-7">連続クリックで状態を循環できる（可→不可→要相談→可...）</label></li>
+    <li><input type="checkbox" id="tl-8"><label for="tl-8">日を跨いだ翌日に開くと表示範囲が1日ずれる</label></li>
+    <li><input type="checkbox" id="tl-9"><label for="tl-9">スマホでも指で正確にタップできるサイズ</label></li>
+  </ul>
+</div>
+
+<h3>13.2 地図・ジオコーディング</h3>
+<div class="card">
+  <ul class="checklist" data-section="taslink-features">
+    <li><input type="checkbox" id="tl-10"><label for="tl-10">住所を入力して緯度経度が自動で取れる（[TEST] 施設で確認）</label></li>
+    <li><input type="checkbox" id="tl-11"><label for="tl-11">曖昧な住所（丁番地なし）でも近い場所にピンが立つ or エラー</label></li>
+    <li><input type="checkbox" id="tl-12"><label for="tl-12">地図上でピンが多数重なっているとき、クラスタリングされる</label></li>
+    <li><input type="checkbox" id="tl-13"><label for="tl-13">ズームインするとピンが分離する</label></li>
+    <li><input type="checkbox" id="tl-14"><label for="tl-14">近隣検索の距離指定（1km、3km、5km 等）が動く</label></li>
+    <li><input type="checkbox" id="tl-15"><label for="tl-15">地図の現在地取得（あれば）でブラウザの位置情報許可ダイアログが出る</label></li>
+    <li><input type="checkbox" id="tl-16"><label for="tl-16">位置情報を拒否した場合の挙動（デフォルト位置表示等）</label></li>
+  </ul>
+</div>
+
+<h3>13.3 タグ管理</h3>
+<div class="card">
+  <ul class="checklist" data-section="taslink-features">
+    <li><input type="checkbox" id="tl-17"><label for="tl-17">タグの色を選ぶピッカーで色見本が確認できる</label></li>
+    <li><input type="checkbox" id="tl-18"><label for="tl-18">同名タグ作成でエラー（大文字小文字は同一扱いか要確認）</label></li>
+    <li><input type="checkbox" id="tl-19"><label for="tl-19">タグの並び順（作成順・アルファベット・使用数）</label></li>
+    <li><input type="checkbox" id="tl-20"><label for="tl-20">カテゴリ別にグループ化表示</label></li>
+    <li><input type="checkbox" id="tl-21"><label for="tl-21">タグ追加のオートコンプリートが動く（数文字入力で候補）</label></li>
+  </ul>
+</div>
+
+<h3>13.4 KPI カード</h3>
+<div class="card">
+  <ul class="checklist" data-section="taslink-features">
+    <li><input type="checkbox" id="tl-22"><label for="tl-22">数字が「＋X 前月比」等の比較で表示（機能があれば）</label></li>
+    <li><input type="checkbox" id="tl-23"><label for="tl-23">数字にマウスを重ねると内訳が出る（機能があれば）</label></li>
+    <li><input type="checkbox" id="tl-24"><label for="tl-24">数字の更新頻度（リアルタイム or 数分遅延）を確認</label></li>
+    <li><input type="checkbox" id="tl-25"><label for="tl-25">6種類のカードが自分の担当分だけか、全体か明記されている</label></li>
+  </ul>
+</div>
+
+<h3>13.5 テレアポステータス</h3>
+<div class="card">
+  <ul class="checklist" data-section="taslink-features">
+    <li><input type="checkbox" id="tl-26"><label for="tl-26">ステータス選択肢が全部表示される</label></li>
+    <li><input type="checkbox" id="tl-27"><label for="tl-27">特定ステータス選択時に案件登録ダイアログが出る（該当時）</label></li>
+    <li><input type="checkbox" id="tl-28"><label for="tl-28">ステータス変更履歴が残る</label></li>
+    <li><input type="checkbox" id="tl-29"><label for="tl-29">Zoom Phone 連携ボタンの表示位置と見た目（<strong>クリックはしない</strong>）</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="taslink-features" placeholder="TasLink固有機能で気になったこと..."></textarea>
+
+<!-- 14. 印刷 -->
+<h2 id="print">14. 印刷レイアウト詳細 <span class="section-progress" data-progress="print"></span></h2>
+
+<div class="card">
+  <p>スキルシート印刷を <strong>実際にプレビューして</strong> 確認（印刷キャンセルでOK）。</p>
+  <ul class="checklist" data-section="print">
+    <li><input type="checkbox" id="pr-1"><label for="pr-1">A4 縦で印刷プレビューして 1〜2ページに収まる</label></li>
+    <li><input type="checkbox" id="pr-2"><label for="pr-2">文字が右端で見切れない</label></li>
+    <li><input type="checkbox" id="pr-3"><label for="pr-3">下端で見切れない</label></li>
+    <li><input type="checkbox" id="pr-4"><label for="pr-4">複数ページになったとき、途中で不自然に切れない（段落の途中でページ跨ぎしない等）</label></li>
+    <li><input type="checkbox" id="pr-5"><label for="pr-5">サイドバー・ヘッダー・フッターが印刷に出ない</label></li>
+    <li><input type="checkbox" id="pr-6"><label for="pr-6">URL・ページ番号がフッター表示されない（or 適切に表示）</label></li>
+    <li><input type="checkbox" id="pr-7"><label for="pr-7">背景色（カラー印刷）が意図通り</label></li>
+    <li><input type="checkbox" id="pr-8"><label for="pr-8">モノクロ印刷でも情報が読める</label></li>
+    <li><input type="checkbox" id="pr-9"><label for="pr-9">職務経歴が長いワーカーでも印刷が破綻しない</label></li>
+    <li><input type="checkbox" id="pr-10"><label for="pr-10">A4 横で試すと表がはみ出す or 適切</label></li>
+    <li><input type="checkbox" id="pr-11"><label for="pr-11">PDF 保存でも同じレイアウトになる</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="print" placeholder="印刷レイアウトで気になったこと..."></textarea>
+
+<!-- 15. エラーメッセージ -->
+<h2 id="error-msg">15. エラーメッセージの網羅 <span class="section-progress" data-progress="error-msg"></span></h2>
+
+<div class="card">
+  <p>各バリデーションエラー・システムエラーが「日本語で・具体的で・親切」かをチェック。</p>
+
+  <div class="example-good">
+    ✅ 良い例: 「メールアドレスの形式が正しくありません（例: name@example.com）」
+  </div>
+  <div class="example-bad">
+    ❌ 悪い例: 「Invalid input」「エラーが発生しました」「E001」
+  </div>
+
+  <ul class="checklist" data-section="error-msg">
+    <li><input type="checkbox" id="er-1"><label for="er-1">必須項目未入力: 「XXを入力してください」と項目名が明記</label></li>
+    <li><input type="checkbox" id="er-2"><label for="er-2">文字数超過: 「XX文字以内で入力してください」と上限明記</label></li>
+    <li><input type="checkbox" id="er-3"><label for="er-3">メール形式エラー: 例示付きの説明</label></li>
+    <li><input type="checkbox" id="er-4"><label for="er-4">電話番号形式エラー: 例示付きの説明</label></li>
+    <li><input type="checkbox" id="er-5"><label for="er-5">数値以外入力: 「数字で入力してください」</label></li>
+    <li><input type="checkbox" id="er-6"><label for="er-6">重複エラー: 「同じXXが既に登録されています」</label></li>
+    <li><input type="checkbox" id="er-7"><label for="er-7">権限エラー: 「この操作を行う権限がありません」</label></li>
+    <li><input type="checkbox" id="er-8"><label for="er-8">404 エラー: 「お探しのデータが見つかりませんでした」+ 戻る導線</label></li>
+    <li><input type="checkbox" id="er-9"><label for="er-9">500 エラー（発生させにくいが）: 「一時的な問題が発生」+ 再試行導線</label></li>
+    <li><input type="checkbox" id="er-10"><label for="er-10">エラーが「どの項目で発生したか」ハイライトされる</label></li>
+    <li><input type="checkbox" id="er-11"><label for="er-11">エラー表示位置が入力欄の下 or 右で見つけやすい</label></li>
+    <li><input type="checkbox" id="er-12"><label for="er-12">エラー修正後、リアルタイムでエラー表示が消える（or 再送信時に消える）</label></li>
+    <li><input type="checkbox" id="er-13"><label for="er-13">複数エラーがある場合、全部まとめて表示される</label></li>
+    <li><input type="checkbox" id="er-14"><label for="er-14">エラー画面（404等）にもサイドバー・ナビゲーションが表示される</label></li>
+    <li><input type="checkbox" id="er-15"><label for="er-15">スタックトレース・SQL エラー等の内部情報が画面に出ていない</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="error-msg" placeholder="エラーメッセージで気になったこと..."></textarea>
+
+<!-- 16. コピペ -->
+<h2 id="copy-paste">16. コピペ・ドラッグ挙動 <span class="section-progress" data-progress="copy-paste"></span></h2>
+
+<div class="card">
+  <ul class="checklist" data-section="copy-paste">
+    <li><input type="checkbox" id="cp-1"><label for="cp-1">氏名欄に別サイトからコピーした文字列を貼り付けできる</label></li>
+    <li><input type="checkbox" id="cp-2"><label for="cp-2">貼り付けた文字列の書式（太字・色）が除去される（プレーンテキスト保存）</label></li>
+    <li><input type="checkbox" id="cp-3"><label for="cp-3">電話番号を <code>03-1234-5678</code> でコピペしても正しく保存</label></li>
+    <li><input type="checkbox" id="cp-4"><label for="cp-4">住所を Google Maps からコピペできる</label></li>
+    <li><input type="checkbox" id="cp-5"><label for="cp-5">Excel からコピペしてもタブ文字で崩れない</label></li>
+    <li><input type="checkbox" id="cp-6"><label for="cp-6">改行入りテキストを名前欄（1行想定）に貼ると 1行に変換 or エラー</label></li>
+    <li><input type="checkbox" id="cp-7"><label for="cp-7">画面表示のテキスト（電話番号・メール等）を選択してコピーできる</label></li>
+    <li><input type="checkbox" id="cp-8"><label for="cp-8">スマホでも長押しでコピー可能</label></li>
+    <li><input type="checkbox" id="cp-9"><label for="cp-9">ドラッグ&ドロップでファイルアップロード（機能があれば）</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="copy-paste" placeholder="コピペで気になったこと..."></textarea>
+
+<!-- 17. パフォーマンス -->
+<h2 id="performance">17. 体感速度・パフォーマンス <span class="section-progress" data-progress="performance"></span></h2>
+
+<div class="card">
+  <p>「なんか遅い」を数値化して報告。</p>
+  <table>
+    <thead><tr><th>目安</th><th>体感</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td>〜1秒</td><td>気にならない</td><td>OK</td></tr>
+      <tr><td>1〜3秒</td><td>少し待つ感じ</td><td>OK（ローディング表示があれば）</td></tr>
+      <tr><td>3〜5秒</td><td>もどかしい</td><td>要改善（低〜中）</td></tr>
+      <tr><td>5秒〜</td><td>止まってる？</td><td>NG（要報告 中〜高）</td></tr>
+    </tbody>
+  </table>
+
+  <ul class="checklist" data-section="performance">
+    <li><input type="checkbox" id="pf-1"><label for="pf-1">ダッシュボード初回表示 → 何秒？</label></li>
+    <li><input type="checkbox" id="pf-2"><label for="pf-2">ワーカー一覧 100件表示 → 何秒？</label></li>
+    <li><input type="checkbox" id="pf-3"><label for="pf-3">検索実行 → 結果表示まで何秒？</label></li>
+    <li><input type="checkbox" id="pf-4"><label for="pf-4">ワーカー詳細を開く → 何秒？</label></li>
+    <li><input type="checkbox" id="pf-5"><label for="pf-5">保存ボタンを押してから完了通知まで → 何秒？</label></li>
+    <li><input type="checkbox" id="pf-6"><label for="pf-6">地図初回表示 → 何秒？</label></li>
+    <li><input type="checkbox" id="pf-7"><label for="pf-7">ページ遷移中に画面が真っ白になる期間はあるか</label></li>
+    <li><input type="checkbox" id="pf-8"><label for="pf-8">スクロールがカクつかない（60fps 感）</label></li>
+    <li><input type="checkbox" id="pf-9"><label for="pf-9">大量データ画面（100件超）でも操作が重くならない</label></li>
+    <li><input type="checkbox" id="pf-10"><label for="pf-10">スマホ 4G 回線で同じページを開いても実用範囲か</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="performance" placeholder="パフォーマンスで気になった秒数..."></textarea>
+
+<!-- 18. 視覚的 -->
+<h2 id="visual">18. 視覚的な細部 <span class="section-progress" data-progress="visual"></span></h2>
+
+<div class="card">
+  <h4>18.1 余白・整列</h4>
+  <ul class="checklist" data-section="visual">
+    <li><input type="checkbox" id="vi-1"><label for="vi-1">要素間の余白が均等（不揃いに広い/狭いところがない）</label></li>
+    <li><input type="checkbox" id="vi-2"><label for="vi-2">左右対称に配置されるべき要素（例: モーダルのボタン）が対称</label></li>
+    <li><input type="checkbox" id="vi-3"><label for="vi-3">見出しと本文の間隔が適度（詰まりすぎ・空きすぎない）</label></li>
+    <li><input type="checkbox" id="vi-4"><label for="vi-4">テーブルの行間が読みやすい</label></li>
+    <li><input type="checkbox" id="vi-5"><label for="vi-5">列の幅が内容に応じて適切（狭すぎで文字が縦になっていない）</label></li>
+  </ul>
+
+  <h4>18.2 色・タイポグラフィ</h4>
+  <ul class="checklist" data-section="visual">
+    <li><input type="checkbox" id="vi-6"><label for="vi-6">プライマリカラー（メインの青など）が全画面で統一</label></li>
+    <li><input type="checkbox" id="vi-7"><label for="vi-7">警告・エラーの赤色が同じトーン</label></li>
+    <li><input type="checkbox" id="vi-8"><label for="vi-8">見出しのフォントサイズ階層が明確（H1 &gt; H2 &gt; H3）</label></li>
+    <li><input type="checkbox" id="vi-9"><label for="vi-9">本文のフォントサイズが読みやすい（12px以下はNG）</label></li>
+    <li><input type="checkbox" id="vi-10"><label for="vi-10">日本語と英数字が混在してもフォントが不揃いに見えない</label></li>
+    <li><input type="checkbox" id="vi-11"><label for="vi-11">数字が等幅で揃う（0 と 8 の幅が同じで金額列が揃う）</label></li>
+  </ul>
+
+  <h4>18.3 アイコン・画像</h4>
+  <ul class="checklist" data-section="visual">
+    <li><input type="checkbox" id="vi-12"><label for="vi-12">アイコンが全画面で同じスタイル（線幅・角丸が揃う）</label></li>
+    <li><input type="checkbox" id="vi-13"><label for="vi-13">アイコンとテキストが縦方向に揃っている</label></li>
+    <li><input type="checkbox" id="vi-14"><label for="vi-14">ロゴが Retina 対応（拡大しても粗くならない）</label></li>
+    <li><input type="checkbox" id="vi-15"><label for="vi-15">画像がない項目にプレースホルダー画像（no-image）が出る</label></li>
+  </ul>
+
+  <h4>18.4 動き（アニメーション）</h4>
+  <ul class="checklist" data-section="visual">
+    <li><input type="checkbox" id="vi-16"><label for="vi-16">モーダルのフェードイン・アウトが滑らか</label></li>
+    <li><input type="checkbox" id="vi-17"><label for="vi-17">ホバー時の色変化が急激すぎない</label></li>
+    <li><input type="checkbox" id="vi-18"><label for="vi-18">アニメーションが遅すぎない（画面遷移に長く待たされない）</label></li>
+    <li><input type="checkbox" id="vi-19"><label for="vi-19">アコーディオン（開閉）が自然に動く</label></li>
+    <li><input type="checkbox" id="vi-20"><label for="vi-20">スクロール中にちらつきが起きない</label></li>
+  </ul>
+</div>
+<textarea class="note-area" data-note="visual" placeholder="視覚的な違和感..."></textarea>
+
+<!-- 19. 記録 -->
+<h2 id="record">19. Part 2 検証記録</h2>
+
+<div class="card">
+  <h4>Part 2 バグ報告</h4>
+  <textarea class="note-area" data-note="bug-list-p2" style="min-height:240px;" placeholder="Part 2 で見つかったバグ（重要度 低〜中 が多い想定）..."></textarea>
+
+  <h4>UX改善提案</h4>
+  <textarea class="note-area" data-note="ux-suggest" style="min-height:160px;" placeholder="バグではないが、こうすればもっと使いやすい、という提案..."></textarea>
+
+  <h4>体感速度メモ（各画面の秒数）</h4>
+  <textarea class="note-area" data-note="perf-log" style="min-height:120px;" placeholder="例:
+- ダッシュボード初回: 2.1秒
+- /workers 一覧: 3.4秒（少し遅い）
+- 検索実行: 0.8秒
+..."></textarea>
+
+  <h4>Part 2 全体所感</h4>
+  <textarea class="note-area" data-note="overall" style="min-height:120px;" placeholder="Part 2 を終えての総合的な感想..."></textarea>
+</div>
+
+<div style="text-align:center; margin:40px 0; color:var(--muted); font-size:13px;">
+  Part 2 も完了したら、担当者に報告してください。Part 3（性能・大量データ・実運用シミュレーション）が必要な場合は相談。
+</div>
+
+</main>
+</div>
+
+<script>
+const STORAGE_KEY = 'taslink-qa-progress-part2';
+
+function loadProgress() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch { return {}; }
+}
+function saveProgress(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+const state = loadProgress();
+
+document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+  if (state[cb.id]) {
+    cb.checked = true;
+    const li = cb.closest('li');
+    if (li) li.classList.add('done');
+  }
+  cb.addEventListener('change', () => {
+    state[cb.id] = cb.checked;
+    saveProgress(state);
+    const li = cb.closest('li');
+    if (li) li.classList.toggle('done', cb.checked);
+    updateProgress();
+  });
+});
+
+document.querySelectorAll('textarea[data-note]').forEach(ta => {
+  const key = 'note-' + ta.dataset.note;
+  if (state[key]) ta.value = state[key];
+  ta.addEventListener('input', () => {
+    state[key] = ta.value;
+    saveProgress(state);
+  });
+});
+
+function updateProgress() {
+  document.querySelectorAll('[data-progress]').forEach(el => {
+    const section = el.dataset.progress;
+    const cbs = document.querySelectorAll(`[data-section="${section}"] input[type="checkbox"]`);
+    const done = Array.from(cbs).filter(c => c.checked).length;
+    const total = cbs.length;
+    if (total > 0) {
+      el.textContent = `${done}/${total}`;
+    }
+  });
+  const allCbs = document.querySelectorAll('input[type="checkbox"]');
+  const allDone = Array.from(allCbs).filter(c => c.checked).length;
+  const allTotal = allCbs.length;
+  const overallEl = document.getElementById('overall-progress');
+  const overallBar = document.getElementById('overall-bar');
+  if (overallEl) overallEl.textContent = `全体: ${allDone} / ${allTotal}`;
+  if (overallBar) overallBar.style.width = ((allDone / allTotal) * 100) + '%';
+}
+
+function resetProgress() {
+  if (!confirm('チェック進捗とメモをすべて削除します。よろしいですか？')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+function expandAllNotes() {
+  document.querySelectorAll('textarea.note-area').forEach(ta => {
+    ta.style.minHeight = '160px';
+  });
+}
+
+updateProgress();
+</script>
+
+</body>
+</html>
